@@ -69,7 +69,6 @@ import io.livekit.android.compose.meet.ui.theme.LKMeetAppTheme
 import io.livekit.android.compose.state.rememberTracks
 import io.livekit.android.compose.ui.flipped
 import io.livekit.android.e2ee.E2EEOptions
-import io.livekit.android.events.RoomEvent
 import io.livekit.android.room.participant.VideoTrackPublishDefaults
 import io.livekit.android.room.track.CameraPosition
 import io.livekit.android.room.track.LocalVideoTrack
@@ -111,7 +110,7 @@ class CallActivity : ComponentActivity() {
 
         var enableScreenCapture by remember { mutableStateOf<Intent?>(null) }
         var cameraPosition by remember { mutableStateOf(CameraPosition.FRONT) }
-        
+
         LKMeetAppTheme(darkTheme = true) {
             RoomScope(
                 url = url,
@@ -135,16 +134,6 @@ class CallActivity : ComponentActivity() {
                         enableScreenCapture = null
                     } else {
                         enableScreenCapture = data
-                    }
-                }
-
-                // 接收消息的逻辑
-                LaunchedEffect(room) {
-                    room.events.collect { event ->
-                        if (event is RoomEvent.DataReceived) {
-                            val msg = String(event.data, Charsets.UTF_8)
-                            Toast.makeText(this@CallActivity, "对方: $msg", Toast.LENGTH_SHORT).show()
-                        }
                     }
                 }
 
@@ -221,7 +210,7 @@ class CallActivity : ComponentActivity() {
                                 onDismissRequest = { showMessageDialog = false },
                                 onSendMessage = { messageText ->
                                     lifecycleScope.launch {
-                                        room.localParticipant.publishData(messageText.toByteArray(Charsets.UTF_8), reliable = true)
+                                        room.localParticipant.publishData(messageText.toByteArray(Charsets.UTF_8))
                                     }
                                     Toast.makeText(this@CallActivity, "我: $messageText", Toast.LENGTH_SHORT).show()
                                     showMessageDialog = false
@@ -242,8 +231,7 @@ class CallActivity : ComponentActivity() {
             dynacast = true,
             videoTrackPublishDefaults = VideoTrackPublishDefaults(
                 videoEncoding = VideoPreset169.H1440.encoding.copy(
-                    maxBitrate = 12_000_000, // 12 Mbps 码率
-                    maxFramerate = 24        // 24 帧
+                    maxBitrate = 12_000_000 // 12 Mbps 码率
                 ),
                 simulcast = true,
             ),
