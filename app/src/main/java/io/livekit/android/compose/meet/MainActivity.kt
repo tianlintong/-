@@ -61,12 +61,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MainContent(
-                defaultUrl = viewModel.getSavedUrl(),
-                defaultToken = viewModel.getSavedToken(),
+                // 这里填你真实的服务器地址和 Token
+                defaultUrl = "wss://tianlintong1.duckdns.org",
+                defaultToken = "你的永久Token填在这里",
                 defaultE2eeKey = viewModel.getSavedE2EEKey(),
                 defaultE2eeOn = viewModel.getE2EEOptionsOn(),
                 onConnect = { url, token, e2eeKey, e2eeOn ->
-                    // Save settings for future app launches.
                     viewModel.setSavedUrl(url)
                     viewModel.setSavedToken(token)
                     viewModel.setSavedE2EEKey(e2eeKey)
@@ -87,24 +87,17 @@ class MainActivity : ComponentActivity() {
                 },
                 onReset = {
                     viewModel.reset()
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Values reset.",
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                    Toast.makeText(this@MainActivity, "Values reset.", Toast.LENGTH_SHORT).show()
                 },
             )
         }
     }
 
-    @Preview(
-        showBackground = true,
-        showSystemUi = true,
-    )
+    @Preview(showBackground = true, showSystemUi = true)
     @Composable
     fun MainContent(
-        defaultUrl: String = "wss://tianlintong1.duckdns.org",
-        defaultToken: String = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpc3MiOiAiQVBJTUc2cUtNc3M4U01SIiwgInN1YiI6ICJ1c2VyMSIsICJuYmYiOiAxNzkwOTE4NjYxLCAiZXhwIjogNDk0NDUxODY3MSwgInZpZGVvIjogeyJyb29tSm9pbiI6IHRydWUsICJyb29tIjogIjUyMCJ9fQ.qJmdjpaEjjWpJSqPtPuuVp4Jb7z1sWsi8lsf8l39EiI",
+        defaultUrl: String = MainViewModel.URL,
+        defaultToken: String = MainViewModel.TOKEN,
         defaultE2eeKey: String = MainViewModel.E2EE_KEY,
         defaultE2eeOn: Boolean = false,
         onConnect: (url: String, token: String, e2eeKey: String, e2eeOn: Boolean) -> Unit = { _, _, _, _ -> },
@@ -116,81 +109,28 @@ class MainActivity : ComponentActivity() {
             var e2eeKey by remember { mutableStateOf(defaultE2eeKey) }
             var e2eeOn by remember { mutableStateOf(defaultE2eeOn) }
             val scrollState = rememberScrollState()
-            // A surface container using the 'background' color from the theme
-            Surface(
-                color = MaterialTheme.colorScheme.background,
-                modifier = Modifier
-                    .fillMaxSize(),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .verticalScroll(scrollState),
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .padding(10.dp),
-                    ) {
+            Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.verticalScroll(scrollState)) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(10.dp)) {
                         Spacer(modifier = Modifier.height(50.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.banner_dark),
-                            contentDescription = "LiveKit Banner",
-                        )
+                        Image(painter = painterResource(id = R.drawable.banner_dark), contentDescription = "LiveKit Banner")
                         Spacer(modifier = Modifier.height(20.dp))
-                        OutlinedTextField(
-                            value = url,
-                            onValueChange = { url = it },
-                            label = { Text("URL") },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        OutlinedTextField(value = url, onValueChange = { url = it }, label = { Text("URL") }, modifier = Modifier.fillMaxWidth())
                         Spacer(modifier = Modifier.height(20.dp))
-                        OutlinedTextField(
-                            value = token,
-                            onValueChange = { token = it },
-                            label = { Text("Token") },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-
+                        OutlinedTextField(value = token, onValueChange = { token = it }, label = { Text("Token") }, modifier = Modifier.fillMaxWidth())
                         if (e2eeOn) {
                             Spacer(modifier = Modifier.height(20.dp))
-                            OutlinedTextField(
-                                value = e2eeKey,
-                                onValueChange = { e2eeKey = it },
-                                label = { Text("E2EE Key") },
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = e2eeOn,
-                            )
+                            OutlinedTextField(value = e2eeKey, onValueChange = { e2eeKey = it }, label = { Text("E2EE Key") }, modifier = Modifier.fillMaxWidth(), enabled = e2eeOn)
                         }
-
                         Spacer(modifier = Modifier.height(20.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
+                        Row(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                             Text("Enable end-to-end encryption (E2EE)")
-                            Switch(
-                                checked = e2eeOn,
-                                onCheckedChange = { e2eeOn = it },
-                                modifier = Modifier.defaultMinSize(minHeight = 100.dp),
-                            )
+                            Switch(checked = e2eeOn, onCheckedChange = { e2eeOn = it }, modifier = Modifier.defaultMinSize(minHeight = 100.dp))
                         }
-
                         Spacer(modifier = Modifier.height(20.dp))
-                        Button(onClick = { onConnect(url, token, e2eeKey, e2eeOn) }) {
-                            Text("Connect")
-                        }
-
+                        Button(onClick = { onConnect(url, token, e2eeKey, e2eeOn) }) { Text("Connect") }
                         Spacer(modifier = Modifier.height(20.dp))
-                        Button(
-                            onClick = {
-                                onReset()
-                                url = MainViewModel.URL
-                                token = MainViewModel.TOKEN
-                            },
-                        ) {
-                            Text("Reset Values")
-                        }
+                        Button(onClick = { onReset(); url = MainViewModel.URL; token = MainViewModel.TOKEN }) { Text("Reset Values") }
                     }
                 }
             }
