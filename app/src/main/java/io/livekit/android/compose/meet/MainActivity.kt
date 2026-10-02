@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MainContent(
-                // 这里填你真实的服务器地址和 Token
+                // 👇 这里填你真实的服务器地址和 Token
                 defaultUrl = "wss://tianlintong1.duckdns.org",
                 defaultToken = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpc3MiOiAiQVBJTUc2cUtNc3M4U01SIiwgInN1YiI6ICJ1c2VyMSIsICJuYmYiOiAxNzkwOTE4NjYxLCAiZXhwIjogNDk0NDUxODY3MSwgInZpZGVvIjogeyJyb29tSm9pbiI6IHRydWUsICJyb29tIjogIjUyMCJ9fQ.qJmdjpaEjjWpJSqPtPuuVp4Jb7z1sWsi8lsf8l39EiI",
                 defaultE2eeKey = viewModel.getSavedE2EEKey(),
