@@ -154,10 +154,18 @@ class CallActivity : ComponentActivity() {
                     val intent = enableScreenCapture
 
                     if (intent != null) {
-                        val screencastTrack = room.localParticipant.createScreencastTrack(mediaProjectionPermissionResultData = intent)
-                        room.localParticipant.publishVideoTrack(
-                            screencastTrack,
-                        )
+                        val screencastTrack = room.localParticipant.createScreencastTrack(
+    mediaProjectionPermissionResultData = intent,
+    options = ScreenShareTrackOptions(
+        videoEncoding = VideoPreset169.H1440.encoding.copy(
+            maxBitrate = 12_000_000, // 12 Mbps
+            maxFramerate = 24        // 24 帧
+        )
+    )
+)
+room.localParticipant.publishVideoTrack(
+    screencastTrack,
+)
 
                         // Must start a foreground service prior to startCapture.
                         screencastTrack.startForegroundService(null, null)
