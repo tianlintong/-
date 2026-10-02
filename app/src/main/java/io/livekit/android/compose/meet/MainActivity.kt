@@ -1,12 +1,15 @@
 package io.livekit.android.compose.meet
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -23,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import io.livekit.android.compose.meet.ui.theme.LKMeetAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -41,18 +45,29 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     @Composable
     fun WebViewScreen() {
-        // 用于处理屏幕共享权限的请求
+        // 用于挂起网页的请求，等待系统授权后再放行
         var pendingPermissionRequest by remember { mutableStateOf<PermissionRequest?>(null) }
 
-        // 注册屏幕共享权限回调
+        // 1. 原生系统权限申请（摄像头、麦克风）
+        val systemPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            if (permissions.values.all { it }) {
+                // 系统权限已通过，放行网页的请求
+                pendingPermissionRequest?.grant(pendingPermissionRequest?.resources)
+            } else {
+                pendingPermissionRequest?.deny()
+            }
+            pendingPermissionRequest = null
+        }
+
+        // 2. 屏幕共享（录屏）权限申请
         val mediaProjectionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
         ) { result ->
             if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-                // 用户同意了屏幕共享
                 pendingPermissionRequest?.grant(pendingPermissionRequest?.resources)
             } else {
-                // 用户拒绝了屏幕共享
                 pendingPermissionRequest?.deny()
             }
             pendingPermissionRequest = null
@@ -61,11 +76,16 @@ class MainActivity : ComponentActivity() {
         AndroidView(
             factory = { context ->
                 WebView(context).apply {
+                    // 基础设置
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true
-                    settings.mediaPlaybackRequiresUserGesture = false
+                    settings.mediaPlaybackRequiresUserGesture = false // 允许自动播放音视频
                     settings.allowFileAccess = true
                     settings.allowContentAccess = true
+                    settings.cacheMode = WebSettings.LOAD_DEFAULT
+
+                    // 允许 HTTPS 中混合加载 HTTP（如果后台有接口用 http）
+                    settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
                     webViewClient = WebViewClient()
 
@@ -73,18 +93,25 @@ class MainActivity : ComponentActivity() {
                         override fun onPermissionRequest(request: PermissionRequest?) {
                             if (request == null) return
 
-                            // 检查是否包含屏幕共享的权限请求
                             val resources = request.resources
                             val wantsScreenShare = resources.contains("android.webkit.resource.DISPLAY_CAPTURE")
 
                             if (wantsScreenShare) {
-                                // 拦截屏幕共享，手动触发安卓系统的录屏权限申请
+                                // 处理屏幕共享
                                 pendingPermissionRequest = request
                                 val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
                                 mediaProjectionLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
                             } else {
-                                // 如果是普通的麦克风、摄像头请求，直接放行
-                                request.grant(resources)
+                                // 处理普通的摄像头和麦克风
+                                val hasCamera = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                                val hasAudio = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
+                                if (hasCamera && hasAudio) {
+                                    request.grant(resources)
+                                } else {
+                                    pendingPermissionRequest = request
+                                    systemPermissionLauncher.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO))
+                                }
                             }
                         }
                     }
