@@ -314,18 +314,13 @@ class CallActivity : ComponentActivity() {
         }
     }
 
-    private fun defaultRoomOptions(customizer: (RoomOptions) -> RoomOptions): RoomOptions {
-        val roomOptions = RoomOptions(
-            adaptiveStream = true,
-            dynacast = true,
-            videoTrackPublishDefaults = VideoTrackPublishDefaults(
-                videoEncoding = VideoPreset169.H720.encoding.copy(maxBitrate = 3_000_000),
-                simulcast = true,
-            ),
-        )
-
-        return customizer(roomOptions)
-    }
+    videoTrackPublishDefaults = VideoTrackPublishDefaults(
+    videoEncoding = VideoPreset169.H1440.encoding.copy(
+        maxBitrate = 12_000_000, // 锁定 12 Mbps 码率
+        maxFramerate = 24        // 锁定 24 帧
+    ),
+    simulcast = true,
+),
 
     private fun DefaultLKOverrides(context: Context) =
         LiveKitOverrides(
