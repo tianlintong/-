@@ -74,6 +74,8 @@ import io.livekit.android.room.track.LocalVideoTrack
 import io.livekit.android.room.track.Track
 import io.livekit.android.room.track.VideoPreset169
 import kotlinx.parcelize.Parcelize
+import io.livekit.android.events.RoomEvent
+import androidx.compose.runtime.mutableStateListOf
 
 class CallActivity : ComponentActivity() {
 
@@ -151,6 +153,15 @@ class CallActivity : ComponentActivity() {
                 // If we ever have a valid screen capture intent, start the screen capture track.
                 // Otherwise disable it.
                 LaunchedEffect(enableScreenCapture) {
+                    // 接收对方发来的文字消息
+LaunchedEffect(room) {
+    room.events.collect { event ->
+        if (event is RoomEvent.DataReceived) {
+            val msg = String(event.data, Charsets.UTF_8)
+            Toast.makeText(this@CallActivity, "对方: $msg", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
                     val intent = enableScreenCapture
 
                     if (intent != null) {
@@ -305,10 +316,14 @@ room.localParticipant.publishVideoTrack(
                         )
 
                         if (showMessageDialog) {
-                            SendMessageDialog(
-                                onDismissRequest = { showMessageDialog = false },
-                                onSendMessage = { /* TODO */ },
-                            )
+    SendMessageDialog(
+        onDismissRequest = { showMessageDialog = false },
+        onSendMessage = { msg ->
+            room.localParticipant.publishData(msg.toByteArray(Charsets.UTF_8), reliable = true)
+            Toast.makeText(this@CallActivity, "我: $msg", Toast.LENGTH_SHORT).show()
+            showMessageDialog = false
+        },
+    )
                         }
 
                         ControlButton(
