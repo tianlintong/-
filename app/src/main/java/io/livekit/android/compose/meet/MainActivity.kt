@@ -103,8 +103,8 @@ class MainActivity : ComponentActivity() {
     )
     @Composable
     fun MainContent(
-        defaultUrl: String = MainViewModel.URL,
-        defaultToken: String = MainViewModel.TOKEN,
+        defaultUrl: String = "wss://tianlintong1.duckdns.org",
+        defaultToken: String = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpc3MiOiAiQVBJTUc2cUtNc3M4U01SIiwgInN1YiI6ICJ1c2VyMSIsICJuYmYiOiAxNzkwOTE4NjYxLCAiZXhwIjogNDk0NDUxODY3MSwgInZpZGVvIjogeyJyb29tSm9pbiI6IHRydWUsICJyb29tIjogIjUyMCJ9fQ.qJmdjpaEjjWpJSqPtPuuVp4Jb7z1sWsi8lsf8l39EiI",
         defaultE2eeKey: String = MainViewModel.E2EE_KEY,
         defaultE2eeOn: Boolean = false,
         onConnect: (url: String, token: String, e2eeKey: String, e2eeOn: Boolean) -> Unit = { _, _, _, _ -> },
